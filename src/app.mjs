@@ -41,6 +41,9 @@ function saveState() {
 const dollars = value => new Intl.NumberFormat("en-US", {
   style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 2
 }).format(Number(value) || 0);
+const sheetDollars = value => new Intl.NumberFormat("en-US", {
+  style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2
+}).format(Number(value) || 0);
 
 const titleCase = text => text.charAt(0).toUpperCase() + text.slice(1);
 const validAmount = value => value !== "" && Number.isFinite(Number(value)) && Number(value) >= 0;
@@ -168,16 +171,16 @@ function renderResults() {
       <div class="sheet-day">${titleCase(state.day)} money order</div>
       <div class="sheet-columns"><span>SAFE</span><span>CURRENT</span><span>ORDER</span></div>
       <div class="sheet-table">
-        ${rows.map(([label, key, order]) => `<div class="sheet-row"><strong>${label}</strong><span>${dollars(state.safe[key])}</span><b class="${order === null ? "na" : ""}">${order === null ? "" : dollars(order)}</b></div>`).join("")}
-        <div class="sheet-row sheet-order-total"><strong>ORDER TOTAL</strong><span></span><b>${dollars(result.orderTotal)}</b></div>
+        ${rows.map(([label, key, order]) => `<div class="sheet-row"><strong>${label}</strong><span>${sheetDollars(state.safe[key])}</span><b class="${order === null ? "na" : ""}">${order === null ? "" : sheetDollars(order)}</b></div>`).join("")}
+        <div class="sheet-row sheet-order-total"><strong>ORDER TOTAL</strong><span></span><b>${sheetDollars(result.orderTotal)}</b></div>
       </div>
       <div class="sheet-summary">
-        <div><span>ATMs CURRENT</span><strong>${dollars(currentAtmTotal)}</strong></div>
-        <div><span>ATMs NEEDED</span><strong>${dollars(result.atmShortageTotal)}</strong></div>
-        <div><span>SAFE TOTAL</span><strong>${dollars(result.safeTotal)}</strong></div>
-        <div class="with-order"><span>SAFE TOTAL WITH ORDER</span><strong>${dollars(result.safeTotalWithOrder)}</strong></div>
+        <div><span>ATMs CURRENT</span><strong>${sheetDollars(currentAtmTotal)}</strong></div>
+        <div><span>ATMs NEEDED</span><strong>${sheetDollars(result.atmShortageTotal)}</strong></div>
+        <div><span>SAFE TOTAL</span><strong>${sheetDollars(result.safeTotal)}</strong></div>
+        <div class="with-order"><span>SAFE TOTAL WITH ORDER</span><strong>${sheetDollars(result.safeTotalWithOrder)}</strong></div>
       </div>
-      <div class="atm-mini">${result.atmShortages.map((shortage, index) => `<span>ATM ${index + 1}: <b>${dollars(shortage)}</b></span>`).join("")}</div>
+      <div class="atm-mini">${result.atmShortages.map((shortage, index) => `<span>ATM ${index + 1}: <b>${sheetDollars(shortage)}</b></span>`).join("")}</div>
     </section>
     <p class="shot-hint">This sheet is sized for one phone screenshot.</p>
     <div class="footer-actions result-actions"><button class="primary" id="copy">Copy order summary</button><button class="secondary" id="edit">Edit amounts</button><button class="secondary" id="print">Print</button><button class="text-button" id="new">Start a new order</button></div>
