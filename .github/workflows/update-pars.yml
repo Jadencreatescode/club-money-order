@@ -4,61 +4,61 @@ on:
   workflow_dispatch:
     inputs:
       atm_1:
-        description: ATM 1 par
-        required: true
-        default: "15000"
+        description: ATM 1 par, blank keeps current
+        required: false
+        default: ""
       atm_2:
-        description: ATM 2 par
-        required: true
-        default: "24000"
+        description: ATM 2 par, blank keeps current
+        required: false
+        default: ""
       atm_3:
-        description: ATM 3 par
-        required: true
-        default: "24000"
+        description: ATM 3 par, blank keeps current
+        required: false
+        default: ""
       atm_4:
-        description: ATM 4 par
-        required: true
-        default: "15000"
+        description: ATM 4 par, blank keeps current
+        required: false
+        default: ""
       monday_hundreds:
-        description: Monday hundreds par
-        required: true
-        default: "70000"
+        description: Monday hundreds par, blank keeps current
+        required: false
+        default: ""
       monday_twenties:
-        description: Monday twenties par
-        required: true
-        default: "12000"
+        description: Monday twenties par, blank keeps current
+        required: false
+        default: ""
       monday_tens:
-        description: Monday tens par
-        required: true
-        default: "6000"
+        description: Monday tens par, blank keeps current
+        required: false
+        default: ""
       monday_fives:
-        description: Monday fives par
-        required: true
-        default: "10000"
+        description: Monday fives par, blank keeps current
+        required: false
+        default: ""
       monday_ones:
-        description: Monday ones par
-        required: true
-        default: "50000"
+        description: Monday ones par, blank keeps current
+        required: false
+        default: ""
       thursday_hundreds:
-        description: Thursday hundreds par
-        required: true
-        default: "60000"
+        description: Thursday hundreds par, blank keeps current
+        required: false
+        default: ""
       thursday_twenties:
-        description: Thursday twenties par
-        required: true
-        default: "15000"
+        description: Thursday twenties par, blank keeps current
+        required: false
+        default: ""
       thursday_tens:
-        description: Thursday tens par
-        required: true
-        default: "6000"
+        description: Thursday tens par, blank keeps current
+        required: false
+        default: ""
       thursday_fives:
-        description: Thursday fives par
-        required: true
-        default: "8000"
+        description: Thursday fives par, blank keeps current
+        required: false
+        default: ""
       thursday_ones:
-        description: Thursday ones par
-        required: true
-        default: "60000"
+        description: Thursday ones par, blank keeps current
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -91,7 +91,7 @@ jobs:
         run: |
           git config user.name "Money Order Back Office"
           git config user.email "actions@users.noreply.github.com"
-          git add pars.json .github/workflows/update-pars.yml
+          git add pars.json
           if git diff --cached --quiet; then
             echo "Pars already match these values."
             exit 0
