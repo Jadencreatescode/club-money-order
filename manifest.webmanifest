@@ -1,0 +1,9 @@
+{
+  "name": "Club Money Order",
+  "short_name": "Money Order",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f3f5f8",
+  "theme_color": "#101a2b",
+  "icons": []
+}
