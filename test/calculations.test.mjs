@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { getPars, calculateAtmShortages, calculateMoneyOrder, configurePars, resetPars } from "../src/calculations.mjs";
+import { safeEntryFieldLabel } from "../src/presentation.mjs";
 
 test("Monday and Thursday denomination pars match the source sheet", () => {
   assert.deepEqual(getPars("monday"), {
@@ -24,6 +25,29 @@ test("ATM shortages use each ATM par and never create a negative order", () => {
     byAtm: [5000, 4000, 0, 15000],
     total: 24000
   });
+});
+
+test("each ATM refill rounds upward to a whole hundred dollars", () => {
+  assert.deepEqual(calculateAtmShortages([14950, 23901, 24001, 14901]), {
+    byAtm: [100, 100, 0, 100],
+    total: 300
+  });
+});
+
+test("safe denomination orders round upward and hundreds use complete two thousand dollar clips", () => {
+  const result = calculateMoneyOrder({
+    day: "monday",
+    atms: [14950, 24000, 24000, 15000],
+    safe: {
+      hundreds: 70000, twenties: 11901, tens: 5901, fives: 9901, ones: 49901,
+      banksSafe: 0, banksOut: 0, loose: 0, clipped: 0
+    }
+  });
+  assert.deepEqual(result.atmShortages, [100, 0, 0, 0]);
+  assert.deepEqual(result.orders, {
+    hundreds: 2000, twenties: 100, tens: 100, fives: 100, ones: 100
+  });
+  assert.equal(result.orderTotal, 2400);
 });
 
 test("Monday hundreds order adds the safe shortage to all ATM shortages", () => {
@@ -71,4 +95,10 @@ test("authorized configuration changes replace all day and ATM pars", () => {
   assert.deepEqual(getPars("monday"), { hundreds: 1000, twenties: 2000, tens: 3000, fives: 4000, ones: 5000 });
   assert.deepEqual(calculateAtmShortages([0, 0, 0, 0]), { byAtm: [100, 200, 300, 400], total: 1000 });
   resetPars();
+});
+
+test("bank safe and bank out steps do not repeat currently in the safe", () => {
+  assert.equal(safeEntryFieldLabel({ key: "banksSafe", label: "Banks in the safe" }), "Banks in the safe");
+  assert.equal(safeEntryFieldLabel({ key: "banksOut", label: "Banks out" }), "Banks out");
+  assert.equal(safeEntryFieldLabel({ key: "hundreds", label: "Hundreds" }), "Hundreds currently in the safe");
 });

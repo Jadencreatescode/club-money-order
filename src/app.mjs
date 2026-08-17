@@ -1,4 +1,5 @@
 import { ATM_PARS, calculateMoneyOrder, configurePars, getPars } from "./calculations.mjs";
+import { safeEntryFieldLabel } from "./presentation.mjs";
 
 const app = document.querySelector("#app");
 const STORAGE_KEY = "clubMoneyOrderDraftV1";
@@ -127,7 +128,7 @@ function renderSafe() {
     <p class="step-count">Safe entry ${state.safeStep + 1} of ${safeSteps.length}</p>
     <h2>${step.label}</h2>
     <p class="help">Enter the total dollar value. Enter 0 if there is none.</p>
-    <div class="entry-focus">${amountField({ id: "safeAmount", label: `${step.label} currently in the safe`, value: state.safe[step.key], par, autofocus: true })}</div>
+    <div class="entry-focus">${amountField({ id: "safeAmount", label: safeEntryFieldLabel(step), value: state.safe[step.key], par, autofocus: true })}</div>
     ${par !== undefined ? `<div class="par-callout"><span>${titleCase(state.day)} par</span><strong>${dollars(par)}</strong></div>` : ""}
     <p class="error" id="error">${message}</p>
     <div class="actions"><button class="secondary" id="back">Back</button><button class="primary" id="next">${state.safeStep === safeSteps.length - 1 ? "Calculate order" : "Save and continue"}</button></div>

@@ -46,8 +46,12 @@ function money(value) {
   return Number.isFinite(number) && number > 0 ? number : 0;
 }
 
+function roundOrderUp(value, increment) {
+  return value > 0 ? Math.ceil(value / increment) * increment : 0;
+}
+
 export function calculateAtmShortages(atmAmounts = []) {
-  const byAtm = ATM_PARS.map((par, index) => Math.max(par - money(atmAmounts[index]), 0));
+  const byAtm = ATM_PARS.map((par, index) => roundOrderUp(Math.max(par - money(atmAmounts[index]), 0), 100));
   return { byAtm, total: byAtm.reduce((sum, value) => sum + value, 0) };
 }
 
@@ -55,7 +59,8 @@ export function calculateMoneyOrder({ day, atms = [], safe = {} }) {
   const pars = getPars(day);
   const atmShortages = calculateAtmShortages(atms);
   const orders = Object.fromEntries(DENOMINATIONS.map(key => [key, Math.max(pars[key] - money(safe[key]), 0)]));
-  orders.hundreds += atmShortages.total;
+  for (const key of DENOMINATIONS.filter(key => key !== "hundreds")) orders[key] = roundOrderUp(orders[key], 100);
+  orders.hundreds = roundOrderUp(orders.hundreds + atmShortages.total, 2000);
 
   const orderTotal = Object.values(orders).reduce((sum, value) => sum + value, 0);
   const safeTotal = Object.values(safe).reduce((sum, value) => sum + money(value), 0);
