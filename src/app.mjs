@@ -252,16 +252,17 @@ function renderOwner() {
   }
   if (ownerMode === "login") {
     app.innerHTML = `${header("Private owner access.")}
-    <section class="card owner-card">
+    <form class="card owner-card" id="ownerLogin">
       <p class="eyebrow owner-eyebrow">OWNER ONLY</p>
       <h2>Unlock par settings</h2>
       <p class="help">Enter your owner key once. This device will remember it.</p>
-      <label class="field" for="ownerKey"><span class="field-label"><span>Owner key</span></span><input class="owner-key-input" id="ownerKey" type="password" autocomplete="current-password" spellcheck="false" placeholder="Paste owner key"></label>
+      <label class="field" for="ownerKey"><span class="field-label"><span>Owner key</span></span><input class="owner-key-input" id="ownerKey" type="password" inputmode="numeric" autocomplete="current-password" spellcheck="false" placeholder="Enter owner key"></label>
       <p class="error">${ownerMessage}</p>
-      <div class="actions"><button class="secondary" id="ownerBack">Back</button><button class="primary" id="ownerUnlock">Unlock settings</button></div>
-    </section>`;
+      <div class="actions"><button class="secondary" id="ownerBack" type="button">Back</button><button class="primary" id="ownerUnlock" type="submit">Unlock settings</button></div>
+    </form>`;
     app.querySelector("#ownerBack").addEventListener("click", () => { state.screen = "day"; ownerMessage = ""; render(); });
-    app.querySelector("#ownerUnlock").addEventListener("click", async () => {
+    app.querySelector("#ownerLogin").addEventListener("submit", async event => {
+      event.preventDefault();
       const token = app.querySelector("#ownerKey").value.trim();
       if (!token) { ownerMessage = "Enter your owner key."; renderOwner(); return; }
       ownerMode = "loading"; renderOwner();
