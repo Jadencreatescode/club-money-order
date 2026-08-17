@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { getPars, calculateAtmShortages, calculateMoneyOrder } from "../src/calculations.mjs";
+import { getPars, calculateAtmShortages, calculateMoneyOrder, configurePars, resetPars } from "../src/calculations.mjs";
 
 test("Monday and Thursday denomination pars match the source sheet", () => {
   assert.deepEqual(getPars("monday"), {
@@ -58,4 +58,17 @@ test("Thursday uses Thursday pars and orders nothing for ATMs already at par", (
     hundreds: 0, twenties: 5000, tens: 0, fives: 8000, ones: 10000
   });
   assert.equal(result.orderTotal, 23000);
+});
+
+test("authorized configuration changes replace all day and ATM pars", () => {
+  configurePars({
+    atmPars: [100, 200, 300, 400],
+    days: {
+      monday: { hundreds: 1000, twenties: 2000, tens: 3000, fives: 4000, ones: 5000 },
+      thursday: { hundreds: 6000, twenties: 7000, tens: 8000, fives: 9000, ones: 10000 }
+    }
+  });
+  assert.deepEqual(getPars("monday"), { hundreds: 1000, twenties: 2000, tens: 3000, fives: 4000, ones: 5000 });
+  assert.deepEqual(calculateAtmShortages([0, 0, 0, 0]), { byAtm: [100, 200, 300, 400], total: 1000 });
+  resetPars();
 });

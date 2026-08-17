@@ -1,4 +1,4 @@
-import { ATM_PARS, calculateMoneyOrder, getPars } from "./calculations.mjs";
+import { ATM_PARS, calculateMoneyOrder, configurePars, getPars } from "./calculations.mjs";
 
 const app = document.querySelector("#app");
 const STORAGE_KEY = "clubMoneyOrderDraftV1";
@@ -206,5 +206,16 @@ function render() {
   else renderDay();
 }
 
+async function startApp() {
+  try {
+    const response = await fetch(`./pars.json?v=${Date.now()}`, { cache: "no-store" });
+    if (!response.ok) throw new Error("Managed pars unavailable");
+    configurePars(await response.json());
+  } catch (error) {
+    console.warn("Using built in pars", error);
+  }
+  render();
+}
+
 if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("./service-worker.js");
-render();
+startApp();

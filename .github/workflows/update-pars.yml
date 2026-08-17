@@ -1,0 +1,100 @@
+name: Update Money Order Pars
+
+on:
+  workflow_dispatch:
+    inputs:
+      atm_1:
+        description: ATM 1 par
+        required: true
+        default: "15000"
+      atm_2:
+        description: ATM 2 par
+        required: true
+        default: "24000"
+      atm_3:
+        description: ATM 3 par
+        required: true
+        default: "24000"
+      atm_4:
+        description: ATM 4 par
+        required: true
+        default: "15000"
+      monday_hundreds:
+        description: Monday hundreds par
+        required: true
+        default: "70000"
+      monday_twenties:
+        description: Monday twenties par
+        required: true
+        default: "12000"
+      monday_tens:
+        description: Monday tens par
+        required: true
+        default: "6000"
+      monday_fives:
+        description: Monday fives par
+        required: true
+        default: "10000"
+      monday_ones:
+        description: Monday ones par
+        required: true
+        default: "50000"
+      thursday_hundreds:
+        description: Thursday hundreds par
+        required: true
+        default: "60000"
+      thursday_twenties:
+        description: Thursday twenties par
+        required: true
+        default: "15000"
+      thursday_tens:
+        description: Thursday tens par
+        required: true
+        default: "6000"
+      thursday_fives:
+        description: Thursday fives par
+        required: true
+        default: "8000"
+      thursday_ones:
+        description: Thursday ones par
+        required: true
+        default: "60000"
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate and save pars
+        env:
+          ATM_1: ${{ inputs.atm_1 }}
+          ATM_2: ${{ inputs.atm_2 }}
+          ATM_3: ${{ inputs.atm_3 }}
+          ATM_4: ${{ inputs.atm_4 }}
+          MONDAY_HUNDREDS: ${{ inputs.monday_hundreds }}
+          MONDAY_TWENTIES: ${{ inputs.monday_twenties }}
+          MONDAY_TENS: ${{ inputs.monday_tens }}
+          MONDAY_FIVES: ${{ inputs.monday_fives }}
+          MONDAY_ONES: ${{ inputs.monday_ones }}
+          THURSDAY_HUNDREDS: ${{ inputs.thursday_hundreds }}
+          THURSDAY_TWENTIES: ${{ inputs.thursday_twenties }}
+          THURSDAY_TENS: ${{ inputs.thursday_tens }}
+          THURSDAY_FIVES: ${{ inputs.thursday_fives }}
+          THURSDAY_ONES: ${{ inputs.thursday_ones }}
+        run: python3 .github/scripts/update_pars.py
+      - name: Verify calculations
+        run: node --test
+      - name: Publish changes
+        run: |
+          git config user.name "Money Order Back Office"
+          git config user.email "actions@users.noreply.github.com"
+          git add pars.json .github/workflows/update-pars.yml
+          if git diff --cached --quiet; then
+            echo "Pars already match these values."
+            exit 0
+          fi
+          git commit -m "Update money order pars"
+          git push

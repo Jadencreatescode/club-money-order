@@ -1,0 +1,24 @@
+{
+  "atmPars": [
+    15000,
+    24000,
+    24000,
+    15000
+  ],
+  "days": {
+    "monday": {
+      "hundreds": 70000,
+      "twenties": 12000,
+      "tens": 6000,
+      "fives": 10000,
+      "ones": 50000
+    },
+    "thursday": {
+      "hundreds": 60000,
+      "twenties": 15000,
+      "tens": 6000,
+      "fives": 8000,
+      "ones": 60000
+    }
+  }
+}
