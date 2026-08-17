@@ -78,6 +78,18 @@ h2 { margin: 0 0 8px; font-size: clamp(1.35rem, 5vw, 1.9rem); }
 .footer-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
 .footer-actions .primary { grid-column: 1 / -1; }
 .saved { color: var(--good); text-align: center; font-size: .84rem; min-height: 20px; margin-top: 10px; }
+.owner-entry { margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--line); text-align: center; }
+.owner-entry .text-button { min-height: 44px; font-size: .86rem; }
+.owner-card { margin-bottom: 24px; }
+.owner-eyebrow { color: #8a6100; }
+.owner-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.owner-heading h2 { margin-bottom: 0; }
+.owner-card h3 { margin: 26px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line); font-size: 1rem; }
+.owner-key-input { width: 100%; min-height: 58px; border: 2px solid var(--line); border-radius: 13px; padding: 0 14px; background: #fbfcfe; color: var(--ink); font-weight: 750; }
+.owner-key-input:focus { outline: 3px solid rgba(244,196,48,.23); border-color: var(--accent-dark); }
+.owner-grid .money-input { font-variant-numeric: tabular-nums; }
+.owner-status.success { color: var(--good); }
+.owner-save-actions { position: sticky; bottom: max(8px, env(safe-area-inset-bottom)); background: rgba(255,255,255,.96); padding: 10px 0; z-index: 3; }
 
 /* Compact screenshot result sheet */
 .result-page { max-width: 560px; margin: 0 auto; }

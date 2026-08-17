@@ -2,6 +2,10 @@ import { ATM_PARS, calculateMoneyOrder, configurePars, getPars } from "./calcula
 
 const app = document.querySelector("#app");
 const STORAGE_KEY = "clubMoneyOrderDraftV1";
+const OWNER_KEY_STORAGE = "clubMoneyOrderOwnerKeyV1";
+const API_URL = "https://money-order-api.trust3d.tech";
+let ownerMode = "login";
+let ownerMessage = "";
 const safeSteps = [
   { key: "hundreds", label: "Hundreds", par: true },
   { key: "twenties", label: "Twenties", par: true },
@@ -70,15 +74,18 @@ function amountField({ id, label, value, par, autofocus = false }) {
 }
 
 function renderDay() {
+  const mondayPars = getPars("monday");
+  const thursdayPars = getPars("thursday");
   app.innerHTML = `${header("Choose the money order you are preparing.")}
   <section class="card">${progress(1)}
     <h2>Which money order is this?</h2>
     <p class="help">The selected day sets the correct safe pars.</p>
     <div class="day-grid">
-      <button class="day-button" data-day="monday"><strong>Monday</strong><small>Hundreds par ${dollars(70000)}</small></button>
-      <button class="day-button" data-day="thursday"><strong>Thursday</strong><small>Hundreds par ${dollars(60000)}</small></button>
+      <button class="day-button" data-day="monday"><strong>Monday</strong><small>Hundreds par ${dollars(mondayPars.hundreds)}</small></button>
+      <button class="day-button" data-day="thursday"><strong>Thursday</strong><small>Hundreds par ${dollars(thursdayPars.hundreds)}</small></button>
     </div>
     ${state.day ? `<div class="actions"><button class="text-button" id="resume">Resume saved ${titleCase(state.day)} order</button></div>` : ""}
+    <div class="owner-entry"><button class="text-button" id="ownerSettings">Owner settings</button></div>
   </section>`;
   app.querySelectorAll("[data-day]").forEach(button => button.addEventListener("click", () => {
     const chosen = button.dataset.day;
@@ -87,6 +94,7 @@ function renderDay() {
     saveState(); render();
   }));
   app.querySelector("#resume")?.addEventListener("click", () => { state.screen = "atms"; render(); });
+  app.querySelector("#ownerSettings").addEventListener("click", openOwnerSettings);
 }
 
 function renderAtms() {
@@ -198,21 +206,140 @@ function renderResults() {
   });
 }
 
+async function apiRequest(path, options = {}) {
+  const response = await fetch(`${API_URL}${path}`, { cache: "no-store", ...options });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(body.error || "The settings service is unavailable");
+    error.status = response.status;
+    throw error;
+  }
+  return body;
+}
+
+async function openOwnerSettings() {
+  state.screen = "owner";
+  ownerMessage = "";
+  const token = localStorage.getItem(OWNER_KEY_STORAGE);
+  if (!token) {
+    ownerMode = "login";
+    render();
+    return;
+  }
+  ownerMode = "loading";
+  render();
+  try {
+    await apiRequest("/owner/verify", { method: "POST", headers: { Authorization: `Bearer ${token}` } });
+    configurePars(await apiRequest("/pars"));
+    ownerMode = "settings";
+  } catch (error) {
+    if (error.status === 401) localStorage.removeItem(OWNER_KEY_STORAGE);
+    ownerMode = "login";
+    ownerMessage = error.message;
+  }
+  render();
+}
+
+function ownerParField(id, label, value) {
+  return amountField({ id, label, value });
+}
+
+function renderOwner() {
+  if (ownerMode === "loading") {
+    app.innerHTML = `${header("Opening your private settings.")}<section class="card owner-card"><h2>Checking owner access</h2><p class="help">One moment while the app verifies this device.</p></section>`;
+    return;
+  }
+  if (ownerMode === "login") {
+    app.innerHTML = `${header("Private owner access.")}
+    <section class="card owner-card">
+      <p class="eyebrow owner-eyebrow">OWNER ONLY</p>
+      <h2>Unlock par settings</h2>
+      <p class="help">Enter your owner key once. This device will remember it.</p>
+      <label class="field" for="ownerKey"><span class="field-label"><span>Owner key</span></span><input class="owner-key-input" id="ownerKey" type="password" autocomplete="current-password" spellcheck="false" placeholder="Paste owner key"></label>
+      <p class="error">${ownerMessage}</p>
+      <div class="actions"><button class="secondary" id="ownerBack">Back</button><button class="primary" id="ownerUnlock">Unlock settings</button></div>
+    </section>`;
+    app.querySelector("#ownerBack").addEventListener("click", () => { state.screen = "day"; ownerMessage = ""; render(); });
+    app.querySelector("#ownerUnlock").addEventListener("click", async () => {
+      const token = app.querySelector("#ownerKey").value.trim();
+      if (!token) { ownerMessage = "Enter your owner key."; renderOwner(); return; }
+      ownerMode = "loading"; renderOwner();
+      try {
+        await apiRequest("/owner/verify", { method: "POST", headers: { Authorization: `Bearer ${token}` } });
+        localStorage.setItem(OWNER_KEY_STORAGE, token);
+        configurePars(await apiRequest("/pars"));
+        ownerMode = "settings"; ownerMessage = "";
+      } catch (error) {
+        ownerMode = "login"; ownerMessage = error.message;
+      }
+      renderOwner();
+    });
+    return;
+  }
+
+  const monday = getPars("monday");
+  const thursday = getPars("thursday");
+  app.innerHTML = `${header("Adjust the pars used by every coworker.")}
+  <section class="card owner-card">
+    <div class="owner-heading"><div><p class="eyebrow owner-eyebrow">OWNER SETTINGS</p><h2>Money order pars</h2></div><button class="text-button" id="ownerLock">Lock</button></div>
+    <p class="help">Changes take effect for everyone the next time the app opens or refreshes.</p>
+    <h3>ATM pars</h3><div class="field-grid owner-grid">${ATM_PARS.map((value, index) => ownerParField(`owner-atm-${index}`, `ATM ${index + 1}`, value)).join("")}</div>
+    <h3>Monday pars</h3><div class="field-grid owner-grid">${Object.entries(monday).map(([key, value]) => ownerParField(`owner-monday-${key}`, titleCase(key), value)).join("")}</div>
+    <h3>Thursday pars</h3><div class="field-grid owner-grid">${Object.entries(thursday).map(([key, value]) => ownerParField(`owner-thursday-${key}`, titleCase(key), value)).join("")}</div>
+    <p class="error owner-status ${ownerMessage.startsWith("Saved") ? "success" : ""}">${ownerMessage}</p>
+    <div class="actions owner-save-actions"><button class="secondary" id="ownerCancel">Back</button><button class="primary" id="ownerSave">Save pars for everyone</button></div>
+  </section>`;
+  app.querySelector("#ownerCancel").addEventListener("click", () => { state.screen = "day"; ownerMessage = ""; render(); });
+  app.querySelector("#ownerLock").addEventListener("click", () => { localStorage.removeItem(OWNER_KEY_STORAGE); ownerMode = "login"; ownerMessage = "Owner access removed from this device."; renderOwner(); });
+  app.querySelector("#ownerSave").addEventListener("click", async () => {
+    const value = id => app.querySelector(`#${id}`).value;
+    const entries = [
+      ...ATM_PARS.map((_, index) => value(`owner-atm-${index}`)),
+      ...Object.keys(monday).map(key => value(`owner-monday-${key}`)),
+      ...Object.keys(thursday).map(key => value(`owner-thursday-${key}`))
+    ];
+    if (!entries.every(validAmount)) { ownerMessage = "Enter every par, including zero amounts."; renderOwner(); return; }
+    const config = {
+      atmPars: ATM_PARS.map((_, index) => Number(value(`owner-atm-${index}`))),
+      days: {
+        monday: Object.fromEntries(Object.keys(monday).map(key => [key, Number(value(`owner-monday-${key}`))])),
+        thursday: Object.fromEntries(Object.keys(thursday).map(key => [key, Number(value(`owner-thursday-${key}`))]))
+      }
+    };
+    const token = localStorage.getItem(OWNER_KEY_STORAGE);
+    try {
+      const response = await apiRequest("/pars", { method: "PUT", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify(config) });
+      configurePars(response.pars);
+      ownerMessage = "Saved. The new pars are live for everyone.";
+      renderOwner();
+    } catch (error) {
+      if (error.status === 401) { localStorage.removeItem(OWNER_KEY_STORAGE); ownerMode = "login"; }
+      ownerMessage = error.message;
+      renderOwner();
+    }
+  });
+}
+
 function render() {
-  if (!state.day) state.screen = "day";
+  if (!state.day && state.screen !== "owner") state.screen = "day";
   if (state.screen === "atms") renderAtms();
   else if (state.screen === "safe") renderSafe();
   else if (state.screen === "results") renderResults();
+  else if (state.screen === "owner") renderOwner();
   else renderDay();
 }
 
 async function startApp() {
   try {
-    const response = await fetch(`./pars.json?v=${Date.now()}`, { cache: "no-store" });
-    if (!response.ok) throw new Error("Managed pars unavailable");
-    configurePars(await response.json());
-  } catch (error) {
-    console.warn("Using built in pars", error);
+    configurePars(await apiRequest("/pars"));
+  } catch (apiError) {
+    try {
+      const response = await fetch(`./pars.json?v=${Date.now()}`, { cache: "no-store" });
+      if (!response.ok) throw new Error("Managed pars unavailable");
+      configurePars(await response.json());
+    } catch (fallbackError) {
+      console.warn("Using built in pars", apiError, fallbackError);
+    }
   }
   render();
 }
