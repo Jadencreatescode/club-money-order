@@ -50,6 +50,20 @@ test("safe denomination orders round upward and hundreds use complete two thousa
   assert.equal(result.orderTotal, 2400);
 });
 
+test("ones order uses one hundred dollars up to a one hundred dollar shortage then complete thousand dollar stacks", () => {
+  const onesOrder = currentOnes => calculateMoneyOrder({
+    day: "monday",
+    atms: [15000, 24000, 24000, 15000],
+    safe: { hundreds: 70000, twenties: 12000, tens: 6000, fives: 10000, ones: currentOnes }
+  }).orders.ones;
+
+  assert.equal(onesOrder(49999), 100);
+  assert.equal(onesOrder(49900), 100);
+  assert.equal(onesOrder(49899), 1000);
+  assert.equal(onesOrder(49001), 1000);
+  assert.equal(onesOrder(48999), 2000);
+});
+
 test("Monday hundreds order adds the safe shortage to all ATM shortages", () => {
   const result = calculateMoneyOrder({
     day: "monday",
@@ -62,11 +76,11 @@ test("Monday hundreds order adds the safe shortage to all ATM shortages", () => 
 
   assert.equal(result.atmShortageTotal, 50000);
   assert.deepEqual(result.orders, {
-    hundreds: 100000, twenties: 0, tens: 2000, fives: 1000, ones: 24300
+    hundreds: 100000, twenties: 0, tens: 2000, fives: 1000, ones: 25000
   });
-  assert.equal(result.orderTotal, 127300);
+  assert.equal(result.orderTotal, 128000);
   assert.equal(result.safeTotal, 135799);
-  assert.equal(result.safeTotalWithOrder, 263099);
+  assert.equal(result.safeTotalWithOrder, 263799);
 });
 
 test("Thursday uses Thursday pars and orders nothing for ATMs already at par", () => {

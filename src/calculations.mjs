@@ -59,7 +59,8 @@ export function calculateMoneyOrder({ day, atms = [], safe = {} }) {
   const pars = getPars(day);
   const atmShortages = calculateAtmShortages(atms);
   const orders = Object.fromEntries(DENOMINATIONS.map(key => [key, Math.max(pars[key] - money(safe[key]), 0)]));
-  for (const key of DENOMINATIONS.filter(key => key !== "hundreds")) orders[key] = roundOrderUp(orders[key], 100);
+  for (const key of DENOMINATIONS.filter(key => key !== "hundreds" && key !== "ones")) orders[key] = roundOrderUp(orders[key], 100);
+  orders.ones = roundOrderUp(orders.ones, orders.ones > 100 ? 1000 : 100);
   orders.hundreds = roundOrderUp(orders.hundreds + atmShortages.total, 2000);
 
   const orderTotal = Object.values(orders).reduce((sum, value) => sum + value, 0);
